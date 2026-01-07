@@ -115,9 +115,9 @@ $total_item = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total F
 
 <div class="modal fade" id="modalTambah" tabindex="-1">
     <div class="modal-dialog">
-        <form action="actions/tambah_produk.php" method="POST" class="modal-content">
+        <form action="actions/tambah_produk.php" method="POST" enctype="multipart/form-data" class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Tambah Barang</h5>
+                <h5 class="modal-title">Tambah Barang Ke Mesin</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -137,9 +137,14 @@ $total_item = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total F
                     <label class="small fw-bold">Stok</label>
                     <input type="number" name="stock" class="form-control" required>
                 </div>
+                <div class="mb-2">
+                    <label class="small fw-bold">Pilih Gambar Produk</label>
+                    <input type="file" name="image_file" class="form-control" accept="image/*" required>
+                </div>
             </div>
             <div class="modal-footer">
-                <button type="submit" class="btn btn-primary">Simpan</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="submit" class="btn btn-primary">Simpan ke Mesin</button>
             </div>
         </form>
     </div>
