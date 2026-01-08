@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (loginForm) {
         loginForm.addEventListener('submit', function() {
             const btn = this.querySelector('button');
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Loading...';
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Menyiapkan Panel...';
             btn.disabled = true;
         });
     }
@@ -36,7 +36,7 @@ function pilihProduk(id, nama, harga, stok) {
             <div class="text-info fw-bold mb-1">PRODUK TERPILIH:</div>
             <div class="fs-5 text-white">${nama}</div>
             <div class="text-warning mt-1">Rp ${harga.toLocaleString('id-ID')}</div>
-            <div class="small mt-2 animate-flicker">> Menunggu Pembayaran...</div>
+            <div class="small mt-2 animate-flicker">> Silakan Konfirmasi Pembayaran</div>
         `;
     }
     
@@ -44,45 +44,55 @@ function pilihProduk(id, nama, harga, stok) {
     if (payArea) payArea.style.display = 'block';
 }
 
+/**
+ * INTEGRASI MIDTRANS SNAP
+ */
 function prosesBeli() {
     if (!produkTerpilih) return;
 
-    const modalElement = document.getElementById('modalProses');
-    if (!modalElement) return;
+    Swal.fire({
+        title: 'Menyiapkan Pembayaran...',
+        text: 'Mohon tunggu sebentar',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+    });
 
-    const modal = new bootstrap.Modal(modalElement);
-    modal.show();
-
-    const formData = new URLSearchParams();
-    formData.append('product_id', produkTerpilih.id);
-
-    fetch('api/order.php', {
+    fetch('api/place_order.php', {
         method: 'POST',
-        body: formData
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(produkTerpilih)
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.json();
+    })
     .then(data => {
-        setTimeout(() => {
-            modal.hide();
-            if (data.status === 'success') {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Pembayaran Sukses!',
-                    text: 'Silakan ambil ' + produkTerpilih.nama + ' di laci bawah.',
-                    timer: 3000,
-                    showConfirmButton: false
-                }).then(() => {
-                    location.reload(); 
-                });
-            } else {
-                Swal.fire('Gagal!', data.message, 'error');
-            }
-        }, 2000);
+        Swal.close();
+
+        if (data.token) {
+            window.snap.pay(data.token, {
+                onSuccess: function(result) {
+                    Swal.fire('Berhasil!', 'Pembayaran diterima. Silakan ambil barang.', 'success')
+                        .then(() => { location.reload(); });
+                },
+                onPending: function(result) {
+                    Swal.fire('Menunggu', 'Selesaikan pembayaran QRIS Anda.', 'info');
+                },
+                onError: function(result) {
+                    Swal.fire('Gagal', 'Terjadi kesalahan sistem pembayaran.', 'error');
+                },
+                onClose: function() {
+                    console.log('User menutup popup');
+                }
+            });
+        } else {
+            Swal.fire('Error', data.message || 'Gagal mendapatkan token', 'error');
+        }
     })
     .catch(error => {
-        modal.hide();
+        Swal.close();
         console.error('Error:', error);
-        Swal.fire('Error', 'Gagal menghubungi server', 'error');
+        Swal.fire('Error', 'Gagal menghubungi server pembayaran', 'error');
     });
 }
 
@@ -93,20 +103,24 @@ function resetSistem() {
 // ==========================================
 // 3. LOGIKA ADMIN (EDIT MODAL)
 // ==========================================
-// PENTING: Fungsi ini HARUS berada di luar event listener agar bisa dipanggil onclick
 function isiModalEdit(data) {
     console.log("Data diterima untuk Edit:", data); 
     
-    // Pastikan ID elemen ada sebelum diisi nilainya
     const elId = document.getElementById('edit_id');
     const elSlot = document.getElementById('edit_slot');
     const elName = document.getElementById('edit_name');
     const elPrice = document.getElementById('edit_price');
     const elStock = document.getElementById('edit_stock');
+    const elOldImage = document.getElementById('edit_image_hidden'); // Input Hidden untuk nama file lama
+
+    // Reset input file setiap kali modal dibuka (keamanan browser tidak mengizinkan isi value input file)
+    const elImageFile = document.querySelector('input[name="image_file"]');
+    if (elImageFile) elImageFile.value = '';
 
     if (elId) elId.value = data.id;
     if (elSlot) elSlot.value = data.slot_code;
     if (elName) elName.value = data.name;
     if (elPrice) elPrice.value = data.price;
     if (elStock) elStock.value = data.stock;
+    if (elOldImage) elOldImage.value = data.image; // Simpan nama file gambar lama agar tidak hilang jika tidak diganti
 }

@@ -9,7 +9,7 @@ if (!isset($_SESSION['admin_logged_in'])) {
 
 include '../config/database.php'; 
 
-// Gunakan mysqli_real_escape_string untuk keamanan tambahan di query bawahnya
+// Statistik Ringkas
 $stok_habis_res = mysqli_query($conn, "SELECT COUNT(*) as total FROM products WHERE stock = 0");
 $stok_habis = mysqli_fetch_assoc($stok_habis_res)['total'];
 
@@ -42,7 +42,12 @@ $total_item = mysqli_fetch_assoc($total_item_res)['total'];
 <div class="container">
     <?php if(isset($_GET['status'])): ?>
         <div class="alert alert-info alert-dismissible fade show">
-            <?= htmlspecialchars($_GET['status']) === 'success' ? 'Operasi Berhasil!' : (htmlspecialchars($_GET['status']) === 'deleted' ? 'Produk Dihapus!' : 'Terjadi Perubahan!') ?>
+            <?php 
+                $status = $_GET['status'];
+                if($status === 'success') echo 'Operasi Berhasil!';
+                elseif($status === 'deleted') echo 'Produk Berhasil Dihapus!';
+                else echo 'Terjadi Perubahan!';
+            ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
@@ -128,23 +133,24 @@ $total_item = mysqli_fetch_assoc($total_item_res)['total'];
             <div class="modal-body">
                 <div class="mb-2">
                     <label class="small fw-bold">Kode Slot</label>
-                    <input type="text" name="slot_code" class="form-control" placeholder="A1" required>
+                    <input type="text" name="slot_code" class="form-control" placeholder="Contoh: A1" required>
                 </div>
                 <div class="mb-2">
                     <label class="small fw-bold">Nama Produk</label>
-                    <input type="text" name="name" class="form-control" placeholder="Coca Cola" required>
+                    <input type="text" name="name" class="form-control" placeholder="Contoh: Coca Cola" required>
                 </div>
                 <div class="mb-2">
-                    <label class="small fw-bold">Harga</label>
+                    <label class="small fw-bold">Harga (Rp)</label>
                     <input type="number" name="price" class="form-control" required>
                 </div>
                 <div class="mb-2">
-                    <label class="small fw-bold">Stok</label>
+                    <label class="small fw-bold">Stok Awal</label>
                     <input type="number" name="stock" class="form-control" required>
                 </div>
                 <div class="mb-2">
-                    <label class="small fw-bold">Pilih Gambar Produk</label>
+                    <label class="small fw-bold">Unggah Gambar Produk</label>
                     <input type="file" name="image_file" class="form-control" accept="image/*" required>
+                    <small class="text-muted">Format: JPG, PNG, atau WebP</small>
                 </div>
             </div>
             <div class="modal-footer">
@@ -157,13 +163,15 @@ $total_item = mysqli_fetch_assoc($total_item_res)['total'];
 
 <div class="modal fade" id="modalEdit" tabindex="-1">
     <div class="modal-dialog">
-        <form action="actions/edit_produk.php" method="POST" class="modal-content">
+        <form action="actions/edit_produk.php" method="POST" enctype="multipart/form-data" class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Edit Data Produk</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" name="id" id="edit_id">
+                <input type="hidden" name="old_image" id="edit_image_hidden">
+                
                 <div class="mb-2">
                     <label class="small fw-bold">Kode Slot</label>
                     <input type="text" name="slot_code" id="edit_slot" class="form-control" required>
@@ -173,15 +181,21 @@ $total_item = mysqli_fetch_assoc($total_item_res)['total'];
                     <input type="text" name="name" id="edit_name" class="form-control" required>
                 </div>
                 <div class="mb-2">
-                    <label class="small fw-bold">Harga</label>
+                    <label class="small fw-bold">Harga (Rp)</label>
                     <input type="number" name="price" id="edit_price" class="form-control" required>
                 </div>
                 <div class="mb-2">
                     <label class="small fw-bold">Jumlah Stok</label>
                     <input type="number" name="stock" id="edit_stock" class="form-control" required>
                 </div>
+                <div class="mb-2">
+                    <label class="small fw-bold">Ganti Gambar Produk</label>
+                    <input type="file" name="image_file" class="form-control" accept="image/*">
+                    <small class="text-info">Kosongkan jika tidak ingin mengganti gambar.</small>
+                </div>
             </div>
             <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
                 <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
             </div>
         </form>
