@@ -1,5 +1,7 @@
 <?php 
 session_start();
+
+// LOGIKA: Jika sesi admin_logged_in TIDAK ADA, lempar ke login
 if (!isset($_SESSION['admin_logged_in'])) {
     header("Location: index.php");
     exit;
@@ -7,9 +9,12 @@ if (!isset($_SESSION['admin_logged_in'])) {
 
 include '../config/database.php'; 
 
-// Ambil statistik ringkas
-$stok_habis = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total FROM products WHERE stock = 0"))['total'];
-$total_item = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total FROM products"))['total'];
+// Gunakan mysqli_real_escape_string untuk keamanan tambahan di query bawahnya
+$stok_habis_res = mysqli_query($conn, "SELECT COUNT(*) as total FROM products WHERE stock = 0");
+$stok_habis = mysqli_fetch_assoc($stok_habis_res)['total'];
+
+$total_item_res = mysqli_query($conn, "SELECT COUNT(*) as total FROM products");
+$total_item = mysqli_fetch_assoc($total_item_res)['total'];
 ?>
 <!DOCTYPE html>
 <html lang="id">

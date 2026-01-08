@@ -45,7 +45,7 @@
 
 <div class="vending-wrapper">
     <header>
-        <h2 class="mb-0 fw-bold"><i class="bi bi-cpu"></i> TECH VENDING MACHINE</h2>
+        <h2 class="mb-0 fw-bold"><i class="bi bi-cpu"></i> VENDKU</h2>
     </header>
 
     <div class="main-content">
