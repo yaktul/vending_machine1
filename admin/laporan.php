@@ -1,7 +1,7 @@
 <?php 
 include '../config/database.php'; 
-// Hitung Total Pendapatan
-$total_query = mysqli_query($conn, "SELECT SUM(amount) as total FROM sales");
+// Hitung Total Pendapatan (Hanya yang berstatus success)
+$total_query = mysqli_query($conn, "SELECT SUM(amount) as total FROM sales WHERE status = 'success'");
 $total_data = mysqli_fetch_assoc($total_query);
 $omzet = $total_data['total'] ?? 0;
 ?>
@@ -20,6 +20,9 @@ $omzet = $total_data['total'] ?? 0;
         <a class="navbar-brand" href="#">VM ADMIN PANEL</a>
         <div class="d-flex">
             <a href="dashboard.php" class="btn btn-outline-light me-2">Stok Barang</a>
+            <a href="export_excel.php" class="btn btn-success me-2">
+                <i class="bi bi-file-earmark-excel"></i> Export Excel
+            </a>
             <a href="../index.php" class="btn btn-primary">Buka Web Tablet</a>
         </div>
     </div>
@@ -52,9 +55,11 @@ $omzet = $total_data['total'] ?? 0;
                     </thead>
                     <tbody>
                         <?php
+                        // Filter hanya transaksi yang sukses
                         $sql = "SELECT sales.created_at, products.name, products.slot_code, sales.amount 
                                 FROM sales 
                                 JOIN products ON sales.product_id = products.id 
+                                WHERE sales.status = 'success'
                                 ORDER BY sales.created_at DESC";
                         $res = mysqli_query($conn, $sql);
                         while($row = mysqli_fetch_assoc($res)):
